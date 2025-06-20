@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard - Period Calendar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-purple text-white">
+
+  <!-- Sidebar -->
+  <div class="sidebar text-white">
+    <div class="text-center">
+      <img src="image/logo-main.png.png" alt="Logo" class="logo" style="width: 200px; height: auto;">
+    </div>
+    <a href="#" onclick="showDashboard()"><i class="fa-solid fa-house me-2"></i> Dashboard</a>
+    <a href="#" onclick="showCalendar()"><i class="fa-solid fa-calendar-days me-2"></i> Calendar</a>
+    <a href="#" onclick="showProfile()"><i class="fa-solid fa-user me-2"></i> My profile</a>
+    <a href="#" onclick="viewHistory()"><i class="fa-solid fa-clock-rotate-left me-2"></i> View History</a>
+    <a href="#" onclick="logout()"><i class="fa-solid fa-right-from-bracket me-2"></i> Logout</a>
+  </div>
+
+  <!-- Main Wrapper -->
+  <div class="wrapper d-flex flex-column min-vh-100">
+    <div class="main-content flex-grow-1" id="main-content">
+      <!-- Main content loaded dynamically -->
+    </div>
+
+    <!-- Footer -->
+    <footer class="main-footer text-center text-white p-3">
+      &copy; 2025 Period Calendar Website.
+    </footer>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <script>
+    function showDashboard() {
+      const dashboardHTML = `
+        <div class="container py-4">
+          <div class="text-center mb-4">
+            <h3 class="mt-2">Period & Cycle Tracker</h3>
+          </div>
+
+          <!-- Period Dates -->
+          <div class="card card-style p-3 bg-white text-dark">
+            <h5 class="mb-3 text-primary">🩸 Period Dates</h5>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="periodStart"><strong>Start Date</strong></label>
+                <input type="date" class="form-control" id="periodStart">
+              </div>
+              <div class="col-md-6">
+                <label for="periodEnd"><strong>Last Date</strong></label>
+                <input type="date" class="form-control" id="periodEnd">
+              </div>
+            </div>
+            <button class="btn btn-pink" onclick="calculatePeriodInfo()">Calculate</button>
+          </div>
+
+          <!-- Cycle Summary -->
+          <div class="card card-style p-3 bg-white text-dark mt-3">
+            <h5 class="mb-3 text-primary">📊 Cycle Summary</h5>
+            <div class="row">
+              <div class="col-6"><strong>Cycle Length:</strong><p id="cycleLen">-</p></div>
+              <div class="col-6"><strong>Average Period:</strong><p id="avgPeriod">-</p></div>
+              <div class="col-6"><strong>Next Period:</strong><p id="nextPeriod">-</p></div>
+            </div>
+          </div>
+
+          <!-- Mood & Symptom Tracker -->
+          <div class="card card-style p-3 bg-white text-dark mt-3">
+            <h5 class="mb-3 text-primary">😊 Mood & Symptom Tracker</h5>
+            <div class="mb-2">
+              <label><strong>Mood:</strong></label><br>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="moodHappy">
+                <label class="form-check-label" for="moodHappy"><i class="fa-solid fa-face-laugh-squint me-2"></i> Happy</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="moodSad">
+                <label class="form-check-label" for="moodSad"><i class="fa-solid fa-face-frown me-2"></i> Sad</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="moodAngry">
+                <label class="form-check-label" for="moodAngry"><i class="fa-solid fa-face-angry me-2"></i> Angry</label>
+              </div>
+            </div>
+            <div class="mb-2">
+              <label><strong>Symptoms:</strong></label><br>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="symptomCramps">
+                <label class="form-check-label" for="symptomCramps"><i class="fa-solid fa-droplet me-2"></i> Cramps</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="symptomHeadache">
+                <label class="form-check-label" for="symptomHeadache"><i class="fa-solid fa-face-dizzy me-2"></i> Headache</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="symptomBloating">
+                <label class="form-check-label" for="symptomBloating"><i class="fa-solid fa-face-tired me-2"></i> Bloating</label>
+              </div>
+            </div>
+            <button class="btn btn-pink mt-2" onclick="saveTracker()">Save</button>
+          </div>
+        </div>`;
+      document.getElementById("main-content").innerHTML = dashboardHTML;
+    }
+
+    function calculatePeriodInfo() {
+      const startDate = new Date(document.getElementById("periodStart").value);
+      const endDate = new Date(document.getElementById("periodEnd").value);
+      if (isNaN(startDate) || isNaN(endDate) || startDate > endDate) {
+        alert("Please enter valid dates. Start Date should be before End Date.");
+        return;
+      }
+      const diffDays = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+      const cycleLength = 28;
+      const nextPeriod = new Date(startDate);
+      nextPeriod.setDate(startDate.getDate() + cycleLength);
+
+      document.getElementById("avgPeriod").innerText = `${diffDays} days`;
+      document.getElementById("cycleLen").innerText = `${cycleLength} days`;
+      document.getElementById("nextPeriod").innerText = nextPeriod.toLocaleDateString();
+    }
+
+    function saveTracker() {
+      const mood = [];
+      const symptoms = [];
+
+      if (document.getElementById('moodHappy')?.checked) mood.push("Happy");
+      if (document.getElementById('moodSad')?.checked) mood.push("Sad");
+      if (document.getElementById('moodAngry')?.checked) mood.push("Angry");
+
+      if (document.getElementById('symptomCramps')?.checked) symptoms.push("Cramps");
+      if (document.getElementById('symptomHeadache')?.checked) symptoms.push("Headache");
+      if (document.getElementById('symptomBloating')?.checked) symptoms.push("Bloating");
+
+      const record = {
+        dateSaved: new Date().toLocaleString(),
+        periodStart: document.getElementById("periodStart")?.value || "-",
+        periodEnd: document.getElementById("periodEnd")?.value || "-",
+        cycleLen: document.getElementById("cycleLen")?.innerText || "-",
+        avgPeriod: document.getElementById("avgPeriod")?.innerText || "-",
+        nextPeriod: document.getElementById("nextPeriod")?.innerText || "-",
+        mood,
+        symptoms
+      };
+
+      const history = JSON.parse(localStorage.getItem("history")) || [];
+      history.push(record);
+      localStorage.setItem("history", JSON.stringify(history));
+
+      alert("All data has been saved!");
+    }
+
+    function viewHistory() {
+      const history = JSON.parse(localStorage.getItem("history")) || [];
+      let html = `<div class="container py-4"><h4 class="mb-3">📖 Saved History</h4>`;
+
+      if (history.length === 0) {
+        html += `<div class="card bg-white text-dark p-3 card-style">No records saved yet.</div>`;
+      } else {
+        history.reverse().forEach((item) => {
+          html += `
+            <div class="card bg-white text-dark p-3 card-style mb-3">
+              <p><strong>Saved At:</strong> ${item.dateSaved}</p>
+              <p><strong>Period Start:</strong> ${item.periodStart}</p>
+              <p><strong>Period End:</strong> ${item.periodEnd}</p>
+              <p><strong>Cycle Length:</strong> ${item.cycleLen}</p>
+              <p><strong>Average Period:</strong> ${item.avgPeriod}</p>
+              <p><strong>Next Period:</strong> ${item.nextPeriod}</p>
+              <p><strong>Mood:</strong> ${item.mood.join(', ') || '-'}</p>
+              <p><strong>Symptoms:</strong> ${item.symptoms.join(', ') || '-'}</p>
+            </div>`;
+        });
+      }
+
+      html += `<button class="btn btn-outline-secondary mt-3" onclick="showDashboard()">Back</button></div>`;
+      document.getElementById("main-content").innerHTML = html;
+    }
+
+    function showProfile() {
+      const name = localStorage.getItem("profile_name") || "";
+      const email = localStorage.getItem("profile_email") || "";
+      const blood = localStorage.getItem("profile_blood") || "";
+      const weight = localStorage.getItem("profile_weight") || "";
+
+      document.getElementById("main-content").innerHTML = `
+        <div class="container py-4">
+          <h4 class="mb-4 text-primary">👤 My Profile</h4>
+          <div class="card bg-white text-dark p-4" style="max-width: 500px;">
+            <div class="text-center mb-3">
+              <img src="ima" alt="Logo" style="width: 120px; height: auto;">
+            </div>
+            <form onsubmit="saveProfile(); return false;">
+              <div class="mb-3">
+                <label class="form-label"><i class="fa-solid fa-user me-2"></i>Name</label>
+                <input type="text" class="form-control" id="profileName" value="${name}">
+              </div>
+              <div class="mb-3">
+                <label class="form-label"><i class="fa-solid fa-envelope me-2"></i>Email</label>
+                <input type="email" class="form-control" id="profileEmail" value="${email}">
+              </div>
+              <div class="mb-3">
+                <label class="form-label"><i class="fa-solid fa-droplet me-2"></i>Blood Type</label>
+                <input type="text" class="form-control" id="profileBlood" value="${blood}">
+              </div>
+              <div class="mb-3">
+                <label class="form-label"><i class="fa-solid fa-weight-scale me-2"></i>Weight (kg)</label>
+                <input type="number" class="form-control" id="profileWeight" value="${weight}">
+              </div>
+              <button type="submit" class="btn btn-pink">Save</button>
+            </form>
+          </div>
+        </div>`;
+    }
+
+    function saveProfile() {
+      localStorage.setItem("profile_name", document.getElementById("profileName").value);
+      localStorage.setItem("profile_email", document.getElementById("profileEmail").value);
+      localStorage.setItem("profile_blood", document.getElementById("profileBlood").value);
+      localStorage.setItem("profile_weight", document.getElementById("profileWeight").value);
+      alert("Profile saved successfully!");
+      showProfile();
+    }
+
+    function showCalendar() {
+      document.getElementById("main-content").innerHTML = `
+        <div class="container py-4">
+          <h4 class="mb-3">📅 My Period Calendar</h4>
+          <div id="calendar"></div>
+        </div>`;
+
+      const calendarEl = document.getElementById('calendar');
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        selectable: true,
+        dateClick: function (info) {
+          alert("You clicked: " + info.dateStr);
+        }
+      });
+      calendar.render();
+    }
+
+    function logout() {
+      localStorage.removeItem("isLoggedIn");
+      window.location.href = "index.html";
+    }
+
+    // Optional auto-load view
+    window.onload = function () {
+      if (window.location.hash === "#dashboard") {
+        showDashboard();
+      }
+    };
+  </script>
+</body>
+</html>
+
+
+
